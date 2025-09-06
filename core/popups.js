@@ -1,6 +1,7 @@
 export function setupPopups() {
   console.log("Popups-1");
 }
+
 document.addEventListener('DOMContentLoaded', function () {
   const popupBox = document.querySelector('.rightnow-media--popup-container');
   const closeButtons = document.querySelectorAll('.rightnow-media--popup-close');
