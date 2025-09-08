@@ -28,13 +28,15 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!popupBox) return;
 
   // Show/hide (no CSS classes, no transitions)
-  if (hasUserExited(FLAG_KEY, EXPIRY_KEY)) {
-    popupBox.style.display = 'none';
-    popupBox.style.opacity = '0';
-  } else {
-    popupBox.style.display = 'flex';  // or 'block' if that's what you use
-    popupBox.style.opacity = '1';
-  }
+  setTimeout(() => {
+    if (hasUserExited(FLAG_KEY, EXPIRY_KEY)) {
+      popupBox.style.display = 'none';
+      popupBox.style.opacity = '0';
+    } else {
+      popupBox.style.display = 'flex';
+      popupBox.style.opacity = '1';
+    }
+  }, 15000);
 
   // Close: remember for 7 days, then hide
   closeButtons.forEach((btn) =>
