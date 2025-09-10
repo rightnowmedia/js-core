@@ -1,0 +1,16 @@
+name: Purge jsDelivr cache
+on:
+  push:
+    branches: [ "main" ]   # run this workflow every time you push to main
+
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge jsDelivr cached files
+        run: |
+          curl -s "https://purge.jsdelivr.net/gh/rightnowmedia/js-core/rightnowpastors.js"
+          curl -s "https://purge.jsdelivr.net/gh/rightnowmedia/js-core/rightnowmedia.js"
+          curl -s "https://purge.jsdelivr.net/gh/rightnowmedia/js-core/rightnowmediaatwork.js"
+          curl -s "https://purge.jsdelivr.net/gh/rightnowmedia/js-core/rightnowmediaschools.js"
+          curl -s "https://purge.jsdelivr.net/gh/rightnowmedia/js-core/core/popups.js"
