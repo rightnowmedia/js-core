@@ -1,4 +1,3 @@
-
 //////////// OPEN AND CLOSE BEHAVIOR ////////////
 
 document.addEventListener('DOMContentLoaded', function () {
