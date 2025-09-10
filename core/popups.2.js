@@ -104,15 +104,15 @@ document.addEventListener('DOMContentLoaded', function () {
     };
   }
 
-  // Show/hide based on memory
-  if (hasUserExited(FLAG_KEY, EXPIRY_KEY)) {
-    popupBox.style.display = 'none';
-    popupBox.style.opacity = '0';
-  } else {
-    fadeIn(popupBox);
-  }
+  setTimeout(() => {
+    if (hasUserExited(FLAG_KEY, EXPIRY_KEY)) {
+      popupBox.style.display = 'none';
+      popupBox.style.opacity = '0';
+    } else {
+      fadeIn(popupBox);
+    }
+  }, 15000);
 
-  // Close: remember for 7 days, then fade out
   closeButtons.forEach((btn) =>
     btn.addEventListener('click', () => {
       rememberUserExited(FLAG_KEY, EXPIRY_KEY, 7);
