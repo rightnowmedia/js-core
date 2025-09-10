@@ -1,50 +1,63 @@
-name: Purge jsDelivr cache
+name: Purge jsDelivr cache (robust)
 on:
   push:
-    branches: [ "main" ]     # change if your deploy branch is different
-  workflow_dispatch:         # lets you run it manually from the Actions tab
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   purge:
     runs-on: ubuntu-latest
     steps:
-      - name: Define URLs to purge
-        id: list
+      - name: Define canonical list (without @main)
         run: |
-          cat <<'EOF' > urls.txt
+          cat <<'EOF' > base_urls.txt
           https://cdn.jsdelivr.net/gh/rightnowmedia/js-core/rightnowpastors.js
           https://cdn.jsdelivr.net/gh/rightnowmedia/js-core/rightnowmedia.js
           https://cdn.jsdelivr.net/gh/rightnowmedia/js-core/rightnowmediaatwork.js
           https://cdn.jsdelivr.net/gh/rightnowmedia/js-core/rightnowmediaschools.js
           https://cdn.jsdelivr.net/gh/rightnowmedia/js-core/core/popups.js
           EOF
-          echo "Files to purge:"
-          cat urls.txt
+          echo "Base URLs:"
+          cat base_urls.txt
 
-      - name: Purge jsDelivr for each URL
+      - name: Build full purge list (add @main variants)
+        run: |
+          > all_urls.txt
+          while read -r URL; do
+            echo "$URL" >> all_urls.txt
+            # insert @main before the last path segment
+            echo "$(echo "$URL" | sed 's|/gh/\([^/]\+\)/\([^/]\+\)/|/gh/\1/\2@main/|')" >> all_urls.txt
+          done < base_urls.txt
+          echo "All URLs to purge:"
+          sort -u all_urls.txt
+
+      - name: Purge each URL (with logging + retry)
         run: |
           set -euo pipefail
           while read -r URL; do
             PURGE_URL="${URL/cdn.jsdelivr.net/purge.jsdelivr.net}"
-            echo "Purging: $PURGE_URL"
-            RESP="$(curl -sS "$PURGE_URL")"
-            echo "Response: $RESP"
-          done < urls.txt
+            echo "Purging -> $PURGE_URL"
+            for i in 1 2 3; do
+              RESP="$(curl -fsS "$PURGE_URL" || true)"
+              echo "Attempt $i response: ${RESP:-<empty>}"
+              # tiny backoff between attempts
+              sleep 2
+            done
+          done < <(sort -u all_urls.txt)
 
-      - name: Verify CDN headers after purge
+      - name: Verify headers after purge (expect MISS/REVALIDATED)
         run: |
           while read -r URL; do
             echo ""
             echo "HEAD $URL"
-            # Show key headers that indicate cache behavior
             curl -sI "$URL" | grep -Ei '^(HTTP/|date:|etag:|last-modified:|cache-control:|cf-cache-status:|age:|x-cache:)'
-          done < urls.txt
+          done < <(sort -u all_urls.txt)
 
-      - name: Show first 200 chars of each file (sanity check)
+      - name: Sanity check body (first 200 chars)
         run: |
           while read -r URL; do
             echo ""
             echo "GET $URL (first 200 chars)"
             curl -s "$URL" | head -c 200 || true
             echo -e "\n---"
-          done < urls.txt
+          done < <(sort -u all_urls.txt)
